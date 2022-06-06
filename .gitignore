@@ -1,0 +1,13 @@
+/.docker/mariadb/data/*.key
+/.docker/mariadb/data/mysql/
+/.docker/mariadb/data/performance_schema/
+/.docker/mariadb/data/sys/
+/.docker/mariadb/data/telecom@002dlocal/
+/.docker/mariadb/data/aria_log.00000001
+/.docker/mariadb/data/aria_log_control
+/.docker/mariadb/data/ddl_recovery-backup.log
+/.docker/mariadb/data/ib_buffer_pool
+/.docker/mariadb/data/ib_logfile0
+/.docker/mariadb/data/ibdata1
+/.docker/mariadb/data/multi-master.info
+/.idea

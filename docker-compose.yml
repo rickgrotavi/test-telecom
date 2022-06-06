@@ -1,0 +1,52 @@
+version: "3"
+
+services:
+  nginx:
+    container_name: telecom-main-nginx
+    build:
+      context: .
+      dockerfile: .docker/nginx/Dockerfile
+    ports:
+      - "8000:80"
+    depends_on:
+      - php
+    volumes:
+      - "./.docker/nginx/default.conf:/etc/nginx/conf.d/default.conf"
+      - ./src:/var/www/html
+    networks:
+      - telecom-networks
+
+  php:
+    container_name: telecom-main-php
+    build:
+      context: .
+      dockerfile: .docker/php/Dockerfile
+    volumes:
+      - .docker/php/php.ini:/usr/local/etc/php/php.ini
+      - ./src:/var/www/html
+      - ./storage:/var/www/html/storage
+      - .env:/var/www/html/.env
+    networks:
+      - telecom-networks
+
+  mariadb:
+    container_name: telecom-main-mariadb
+    build:
+      context: .
+      dockerfile: .docker/mariadb/Dockerfile
+    ports:
+      - "3306:3306"
+    environment:
+      MARIADB_DATABASE: telecom-local
+      MARIADB_USER: ${DB_USERNAME:-telecom-local}
+      MARIADB_PASSWORD: ${DB_PASSWORD:-telecom-local}
+      MARIADB_ROOT_PASSWORD: 'secret'
+      MARIADB_ROOT_HOST: "%"
+    volumes:
+      - .docker/mariadb/data:/var/lib/mysql
+    networks:
+      - telecom-networks
+
+networks:
+  telecom-networks:
+    external: true
