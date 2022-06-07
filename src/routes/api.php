@@ -23,5 +23,7 @@ Route::controller(AuthController::class)->group(function () {
     Route::get('me', 'me');
 
     Route::resource('equipments_type', \App\Http\Controllers\EquipmentsTypeController::class);
+    Route::resource('equipments', \App\Http\Controllers\EquipmentController::class);
 
 });
+//TODO вынести в группу auth

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\EquipmentResource;
 use App\Models\Equipment;
 use Illuminate\Http\Request;
 
@@ -10,11 +11,18 @@ class EquipmentController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $paginateCount = (int)$request->get('paginate') ?? 25;
+
+        if ($request->has('search')) {
+            // можно прикрутить настоящий поиск, типа MeiliSearch
+            return EquipmentResource::collection(Equipment::where('description', 'like', '%' . $request->get("search") . '%')->paginate($paginateCount));
+        }
+
+        return EquipmentResource::collection(Equipment::paginate($paginateCount));
     }
 
     /**
@@ -31,11 +39,15 @@ class EquipmentController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function store(Request $request)
+    public function store(Request $request) //TODO make Equipment form request
     {
-        //
+        $bundle = Equipment::create($request->all());
+        return response()->json([
+            'message' => "Equipment stored",
+            'equipment' => EquipmentResource::make($bundle)
+        ]);
     }
 
     /**

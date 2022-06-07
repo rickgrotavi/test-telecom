@@ -13,4 +13,9 @@ class EquipmentsType extends Model
         'equipment_type',
         'serial_number_mask'
     ];
+
+    public function equipment()
+    {
+        return $this->hasMany(Equipment::class, 'equipment_id', 'id');
+    }
 }
