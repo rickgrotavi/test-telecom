@@ -22,8 +22,6 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('refresh', 'refresh');
     Route::get('me', 'me');
 
-    Route::resource('equipments_type', \App\Http\Controllers\EquipmentsTypeController::class);
-    Route::resource('equipments', \App\Http\Controllers\EquipmentController::class);
-
+    Route::resource('equipments_type', \App\Http\Controllers\EquipmentsTypeController::class)->middleware('auth');
+    Route::resource('equipments', \App\Http\Controllers\EquipmentController::class)->middleware('auth');
 });
-//TODO вынести в группу auth

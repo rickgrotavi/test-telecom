@@ -2,12 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\EquipmentRequest;
 use App\Http\Resources\EquipmentResource;
 use App\Models\Equipment;
+use App\Services\OperateEquipmentService;
+use Exception;
 use Illuminate\Http\Request;
 
 class EquipmentController extends Controller
 {
+    private $operateEquipmentService;
+
+    public function __construct()
+    {
+        $this->operateEquipmentService = app(OperateEquipmentService::class);
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -38,15 +48,20 @@ class EquipmentController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param EquipmentRequest $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function store(Request $request) //TODO make Equipment form request
+    public function store(EquipmentRequest $request): \Illuminate\Http\JsonResponse
     {
-        $bundle = Equipment::create($request->all());
+        try {
+            $this->operateEquipmentService->store($request);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ]);
+        }
         return response()->json([
-            'message' => "Equipment stored",
-            'equipment' => EquipmentResource::make($bundle)
+            'message' => "Equipment stored"
         ]);
     }
 
@@ -54,11 +69,21 @@ class EquipmentController extends Controller
      * Display the specified resource.
      *
      * @param  \App\Models\Equipment  $equipment
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function show(Equipment $equipment)
+    public function show($id)
     {
-        //
+        try {
+            $equipment = $this->operateEquipmentService->show($id);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ]);
+        }
+        return response()->json([
+            'message' => "True",
+            'equipment' => $equipment
+        ]);
     }
 
     /**
@@ -75,23 +100,43 @@ class EquipmentController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Equipment  $equipment
-     * @return \Illuminate\Http\Response
+     * @param EquipmentRequest $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function update(Request $request, Equipment $equipment)
+    public function update(EquipmentRequest $request, int $id): \Illuminate\Http\JsonResponse
     {
-        //
+        try {
+            $equipment = $this->operateEquipmentService->update($request, $id);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ]);
+        }
+        return response()->json([
+            'message' => "Equipment updated",
+            'equipment' => EquipmentResource::make($equipment)
+        ]);
     }
 
     /**
      * Remove the specified resource from storage.
      *
      * @param  \App\Models\Equipment  $equipment
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function destroy(Equipment $equipment)
+    public function destroy(int $id)
     {
-        //
+        try {
+            $this->operateEquipmentService->delete($id);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ]);
+        }
+        return response()->json([
+            'message' => "Equipment deleted"
+        ]);
+
     }
 }
