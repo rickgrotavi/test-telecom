@@ -24,7 +24,7 @@ class EquipmentRequest extends FormRequest
     public function rules()
     {
         return [
-            'equipment_id' => ['integer', 'required'],
+            'equipment_id' => ['integer', 'required', 'exists:equipments_types,id'],
             'serial_number' => [is_array($this['serial_number']) ? 'array' : 'string', 'required'],
             'description' => ['string', 'required']
         ];

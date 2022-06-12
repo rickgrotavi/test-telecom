@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 
 class EquipmentController extends Controller
 {
-    private $operateEquipmentService;
+    private OperateEquipmentService $operateEquipmentService;
 
     public function __construct()
     {
@@ -28,7 +28,6 @@ class EquipmentController extends Controller
         $paginateCount = (int)$request->get('paginate') ?? 25;
 
         if ($request->has('search')) {
-            // можно прикрутить настоящий поиск, типа MeiliSearch
             return EquipmentResource::collection(Equipment::where('description', 'like', '%' . $request->get("search") . '%')->paginate($paginateCount));
         }
 
@@ -57,10 +56,12 @@ class EquipmentController extends Controller
             $this->operateEquipmentService->store($request);
         } catch (Exception $e) {
             return response()->json([
+                'status' => false,
                 'message' => $e->getMessage()
             ]);
         }
         return response()->json([
+            'status' => true,
             'message' => "Equipment stored"
         ]);
     }
@@ -68,20 +69,21 @@ class EquipmentController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Equipment  $equipment
+     * @param int $id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function show($id)
+    public function show(int $id): \Illuminate\Http\JsonResponse
     {
         try {
             $equipment = $this->operateEquipmentService->show($id);
         } catch (Exception $e) {
             return response()->json([
+                'status' => false,
                 'message' => $e->getMessage()
             ]);
         }
         return response()->json([
-            'message' => "True",
+            'status' => true,
             'equipment' => $equipment
         ]);
     }
@@ -110,10 +112,12 @@ class EquipmentController extends Controller
             $equipment = $this->operateEquipmentService->update($request, $id);
         } catch (Exception $e) {
             return response()->json([
+                'status' => false,
                 'message' => $e->getMessage()
             ]);
         }
         return response()->json([
+            'status' =>true,
             'message' => "Equipment updated",
             'equipment' => EquipmentResource::make($equipment)
         ]);
@@ -122,19 +126,21 @@ class EquipmentController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Equipment  $equipment
+     * @param int $id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function destroy(int $id)
+    public function destroy(int $id): \Illuminate\Http\JsonResponse
     {
         try {
             $this->operateEquipmentService->delete($id);
         } catch (Exception $e) {
             return response()->json([
+                'status' => false,
                 'message' => $e->getMessage()
             ]);
         }
         return response()->json([
+            'status' => true,
             'message' => "Equipment deleted"
         ]);
 

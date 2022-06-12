@@ -11,6 +11,7 @@ class EquipmentsTypeController extends Controller
     /**
      * Display a listing of the resource.
      *
+     * @param Request $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(Request $request)
@@ -18,7 +19,6 @@ class EquipmentsTypeController extends Controller
         $paginateCount = (int)$request->get('paginate') ?? 25;
 
         if ($request->has('search')) {
-            // можно прикрутить настоящий поиск, типа MeiliSearch
             return EquipmentsTypeResource::collection(EquipmentsType::where('name', 'like', '%' . $request->get("search") . '%')->paginate($paginateCount));
         }
 
