@@ -1,20 +1,20 @@
-Запустить контейнер 
+Р—Р°РїСѓСЃС‚РёС‚СЊ РєРѕРЅС‚РµР№РЅРµСЂ 
 1) docker-compose build
 2) docker network create telecom-networks
 3) docker-compose up
 
-Установить Laravel с зависимостями командой в терминале контейнера php:
+РЈСЃС‚Р°РЅРѕРІРёС‚СЊ Laravel СЃ Р·Р°РІРёСЃРёРјРѕСЃС‚СЏРјРё РєРѕРјР°РЅРґРѕР№ РІ С‚РµСЂРјРёРЅР°Р»Рµ РєРѕРЅС‚РµР№РЅРµСЂР° php:
 
 "composer update"
 
-Заполнить типы оборудования командой в терминале контейнера php:
+Р—Р°РїРѕР»РЅРёС‚СЊ С‚РёРїС‹ РѕР±РѕСЂСѓРґРѕРІР°РЅРёСЏ РєРѕРјР°РЅРґРѕР№ РІ С‚РµСЂРјРёРЅР°Р»Рµ РєРѕРЅС‚РµР№РЅРµСЂР° php:
 
 "php artisan db:seed"
 
 
-Зарегистрировать пользователя через POST запрос
+Р—Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ С‡РµСЂРµР· POST Р·Р°РїСЂРѕСЃ
 
-Пример
+РџСЂРёРјРµСЂ
 	localhost:8000/api/register
 
 	Request Headers
@@ -39,13 +39,13 @@ JWT Routes
     Refresh: localhost:8000/api/refresh. Method:POST
     Me: localhost:8000/api/me. Method: GET
 
-Вывод типов оборудования с поиском и пагинацией
+Р’С‹РІРѕРґ С‚РёРїРѕРІ РѕР±РѕСЂСѓРґРѕРІР°РЅРёСЏ СЃ РїРѕРёСЃРєРѕРј Рё РїР°РіРёРЅР°С†РёРµР№
 
-	GET: localhost:8000/api/equipments_type?paginate=10&search=запрос поиска
+	GET: localhost:8000/api/equipments_type?paginate=10&search=Р·Р°РїСЂРѕСЃ РїРѕРёСЃРєР°
 
-Вывод оборудования с поиском и пагинацией
+Р’С‹РІРѕРґ РѕР±РѕСЂСѓРґРѕРІР°РЅРёСЏ СЃ РїРѕРёСЃРєРѕРј Рё РїР°РіРёРЅР°С†РёРµР№
 
-	GET: localhost:8000/api/equipments?paginate=10&search=запрос поиска
+	GET: localhost:8000/api/equipments?paginate=10&search=Р·Р°РїСЂРѕСЃ РїРѕРёСЃРєР°
 
 Authorization	Bearer Token
 
@@ -61,9 +61,9 @@ Request Params
 
 	page 1
 
-	search запрос поиска
+	search Р·Р°РїСЂРѕСЃ РїРѕРёСЃРєР°
 
-Создание/обновление оборудования
+РЎРѕР·РґР°РЅРёРµ/РѕР±РЅРѕРІР»РµРЅРёРµ РѕР±РѕСЂСѓРґРѕРІР°РЅРёСЏ
 
 		POST localhost:8000/api/equipments
 		PUT localhost:8000/api/equipments
@@ -84,11 +84,11 @@ Request Params
 		{	
 			"equipment_id": 1,
 			"serial_number": "XXAAAAAXAA",
-			"description": "Оборудование"
+			"description": "РћР±РѕСЂСѓРґРѕРІР°РЅРёРµ"
 		}
 
 
-Создание оборудования списком:
+РЎРѕР·РґР°РЅРёРµ РѕР±РѕСЂСѓРґРѕРІР°РЅРёСЏ СЃРїРёСЃРєРѕРј:
 
 	json
 		{
@@ -97,10 +97,10 @@ Request Params
 				"1XXAAX-Xaa",
 				"2VVBBD_Fss"
 				],
-			"description": "Роутер"
+			"description": "Р РѕСѓС‚РµСЂ"
 		}
 
-Удаление оборудовантя
+РЈРґР°Р»РµРЅРёРµ РѕР±РѕСЂСѓРґРѕРІР°РЅС‚СЏ
 
 
 	DELETE localhost:8000/api/equipments/2
@@ -113,7 +113,7 @@ Request Headers
 
 	Accept application/json
 
-Показать экземпляр оборудования
+РџРѕРєР°Р·Р°С‚СЊ СЌРєР·РµРјРїР»СЏСЂ РѕР±РѕСЂСѓРґРѕРІР°РЅРёСЏ
 
 	GET localhost:8000/api/equipments/2
 
