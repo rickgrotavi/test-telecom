@@ -10,6 +10,8 @@ class EquipmentsType extends Model
 {
     use HasFactory, SoftDeletes;
 
+    public $timestamps = false;
+
     protected $fillable = [
         'equipment_type',
         'serial_number_mask'

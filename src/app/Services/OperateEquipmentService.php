@@ -8,6 +8,7 @@ use App\Models\Equipment;
 use App\Models\EquipmentsType;
 use App\Rules\CheckMask;
 use Exception;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Validator;
 
 class OperateEquipmentService
@@ -17,41 +18,58 @@ class OperateEquipmentService
      *  Store Equipment
      *
      * @param EquipmentRequest $request
-     * @return void
+     * @return \Illuminate\Http\JsonResponse
      * @throws Exception
      */
-    public function store(EquipmentRequest $request): void
+    public function store(EquipmentRequest $request): \Illuminate\Http\JsonResponse
     {
-        $equipmentId = $request->get('equipment_id');
-        $description = $request->get('description');
+        $equipments = $request->validated();
 
-        if (gettype($request->get('serial_number')) == 'array') {
-            foreach ($request->get('serial_number') as $item) {
+        $equipmentId = $equipments['equipment_id'];
+        $description = $equipments['description'];
+
+        if (is_array($equipments['serial_number'])) {
+
+            $createdEquipments = collect();
+            foreach ($equipments['serial_number'] as $item) {
                 $equipment = [
                     'equipment_id' => $equipmentId,
                     'description' => $description,
                     'serial_number' => $item
                 ];
-                $this->createEquipment($equipment);
+                $createdEquipments->push($this->createEquipment($equipment));
             }
-        } else {
-            $equipment = [
-                'equipment_id' => $equipmentId,
-                'description' => $description,
-                'serial_number' => $request->get('serial_number'),
-            ];
-            $this->createEquipment($equipment);
+
+            return response()->json([
+                'status' => true,
+                'message' => "Equipment stored",
+                'equipments' => EquipmentResource::make($createdEquipments),
+            ]);
+
         }
+
+        $equipment = [
+            'equipment_id' => $equipmentId,
+            'description' => $description,
+            'serial_number' => $equipments['serial_number'],
+        ];
+        $createdEquipment = $this->createEquipment($equipment);
+
+        return response()->json([
+            'status' => true,
+            'message' => "Equipment stored",
+            'equipments' => EquipmentResource::make($createdEquipment),
+        ]);
     }
 
     /**
      * Create Equipment
      *
      * @param array $equipment
-     * @return void
+     * @return Equipment
      * @throws Exception
      */
-    private function createEquipment(array $equipment): void
+    private function createEquipment(array $equipment): Equipment
     {
         $equipmentId = $equipment['equipment_id'];
 
@@ -61,7 +79,7 @@ class OperateEquipmentService
 
         $this->validateSerialNumber($equipment);
 
-        Equipment::create($equipment);
+        return Equipment::create($equipment);
     }
 
 
@@ -134,5 +152,22 @@ class OperateEquipmentService
     {
         $equipment = Equipment::find($id);
         return EquipmentResource::make($equipment);
+    }
+
+    /**
+     * Display a listing of the resource with paginate.
+     *
+     * @param $request
+     * @return AnonymousResourceCollection
+     */
+    public function getBySearchWithPaginate($request): AnonymousResourceCollection
+    {
+        $paginateCount = $request->get('paginate') ?? 25;
+
+        if ($request->has('search')) {
+            return EquipmentResource::collection(Equipment::where('description', 'like', '%' . $request->get("search") . '%')->paginate($paginateCount));
+        }
+
+        return EquipmentResource::collection(Equipment::paginate($paginateCount));
     }
 }

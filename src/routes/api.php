@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\API\EquipmentController;
+use App\Http\Controllers\API\EquipmentsTypeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -22,6 +24,6 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('refresh', 'refresh');
     Route::get('me', 'me');
 
-    Route::resource('equipments_type', \App\Http\Controllers\EquipmentsTypeController::class)->middleware('auth');
-    Route::resource('equipments', \App\Http\Controllers\EquipmentController::class)->middleware('auth');
+    Route::apiResource('equipments_type', EquipmentsTypeController::class)->middleware('auth');
+    Route::apiResource('equipments', EquipmentController::class)->middleware('auth');
 });
