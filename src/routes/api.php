@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\API\EquipmentController;
-use App\Http\Controllers\API\EquipmentsTypeController;
+use App\Http\Controllers\EquipmentController;
+use App\Http\Controllers\EquipmentsTypeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;

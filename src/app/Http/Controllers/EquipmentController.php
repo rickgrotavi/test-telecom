@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\EquipmentRequest;
-use App\Http\Resources\EquipmentResource;
-use App\Models\Equipment;
 use App\Services\OperateEquipmentService;
 use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class EquipmentController extends Controller
 {
@@ -21,82 +21,35 @@ class EquipmentController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     * @param Request $request
+     * @return AnonymousResourceCollection
      */
-    public function index(Request $request)
+    public function index(Request $request): AnonymousResourceCollection
     {
-        $paginateCount = (int)$request->get('paginate') ?? 25;
-
-        if ($request->has('search')) {
-            return EquipmentResource::collection(Equipment::where('description', 'like', '%' . $request->get("search") . '%')->paginate($paginateCount));
-        }
-
-        return EquipmentResource::collection(Equipment::paginate($paginateCount));
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
+        return $this->operateEquipmentService->getBySearchWithPaginate($request);
     }
 
     /**
      * Store a newly created resource in storage.
      *
      * @param EquipmentRequest $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
+     * @throws Exception
      */
-    public function store(EquipmentRequest $request): \Illuminate\Http\JsonResponse
+    public function store(EquipmentRequest $request): JsonResponse
     {
-        try {
-            $this->operateEquipmentService->store($request);
-        } catch (Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => $e->getMessage()
-            ]);
-        }
-        return response()->json([
-            'status' => true,
-            'message' => "Equipment stored"
-        ]);
+        return $this->operateEquipmentService->store($request);
     }
 
     /**
      * Display the specified resource.
      *
      * @param int $id
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function show(int $id): \Illuminate\Http\JsonResponse
+    public function show(int $id): JsonResponse
     {
-        try {
-            $equipment = $this->operateEquipmentService->show($id);
-        } catch (Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => $e->getMessage()
-            ]);
-        }
-        return response()->json([
-            'status' => true,
-            'equipment' => $equipment
-        ]);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Equipment  $equipment
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Equipment $equipment)
-    {
-        //
+        return $this->operateEquipmentService->show($id);
     }
 
     /**
@@ -104,45 +57,22 @@ class EquipmentController extends Controller
      *
      * @param EquipmentRequest $request
      * @param int $id
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
+     * @throws Exception
      */
-    public function update(EquipmentRequest $request, int $id): \Illuminate\Http\JsonResponse
+    public function update(EquipmentRequest $request, int $id): JsonResponse
     {
-        try {
-            $equipment = $this->operateEquipmentService->update($request, $id);
-        } catch (Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => $e->getMessage()
-            ]);
-        }
-        return response()->json([
-            'status' =>true,
-            'message' => "Equipment updated",
-            'equipment' => EquipmentResource::make($equipment)
-        ]);
+        return $this->operateEquipmentService->update($request, $id);
     }
 
     /**
      * Remove the specified resource from storage.
      *
      * @param int $id
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function destroy(int $id): \Illuminate\Http\JsonResponse
+    public function destroy(int $id): JsonResponse
     {
-        try {
-            $this->operateEquipmentService->delete($id);
-        } catch (Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => $e->getMessage()
-            ]);
-        }
-        return response()->json([
-            'status' => true,
-            'message' => "Equipment deleted"
-        ]);
-
+        return $this->operateEquipmentService->delete($id);
     }
 }

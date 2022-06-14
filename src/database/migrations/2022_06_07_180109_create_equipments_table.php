@@ -14,8 +14,8 @@ return new class extends Migration {
     {
         Schema::create('equipments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('equipment_id');
-            $table->foreign('equipment_id')->references('id')->on('equipments_types');
+            $table->foreignId('equipments_type_id');
+            $table->foreign('equipments_type_id')->references('id')->on('equipments_types');
             $table->string('serial_number');
             $table->string('description');
             $table->timestamps();

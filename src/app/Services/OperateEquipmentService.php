@@ -8,6 +8,7 @@ use App\Models\Equipment;
 use App\Models\EquipmentsType;
 use App\Rules\CheckMask;
 use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Validator;
 
@@ -18,10 +19,10 @@ class OperateEquipmentService
      *  Store Equipment
      *
      * @param EquipmentRequest $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      * @throws Exception
      */
-    public function store(EquipmentRequest $request): \Illuminate\Http\JsonResponse
+    public function store(EquipmentRequest $request): JsonResponse
     {
         $equipments = $request->validated();
 
@@ -37,13 +38,13 @@ class OperateEquipmentService
                     'description' => $description,
                     'serial_number' => $item
                 ];
-                $createdEquipments->push($this->createEquipment($equipment));
+                $createdEquipments->push(EquipmentResource::make($this->createEquipment($equipment)));
             }
+
 
             return response()->json([
                 'status' => true,
-                'message' => "Equipment stored",
-                'equipments' => EquipmentResource::make($createdEquipments),
+                'equipments' => $createdEquipments,
             ]);
 
         }
@@ -57,7 +58,6 @@ class OperateEquipmentService
 
         return response()->json([
             'status' => true,
-            'message' => "Equipment stored",
             'equipments' => EquipmentResource::make($createdEquipment),
         ]);
     }
@@ -66,10 +66,10 @@ class OperateEquipmentService
      * Create Equipment
      *
      * @param array $equipment
-     * @return Equipment
+     * @return array
      * @throws Exception
      */
-    private function createEquipment(array $equipment): Equipment
+    private function createEquipment(array $equipment): array
     {
         $equipmentId = $equipment['equipment_id'];
 
@@ -77,9 +77,22 @@ class OperateEquipmentService
 
         $equipment += ['serial_number_mask' => $serialNumberMask];
 
-        $this->validateSerialNumber($equipment);
+        $validatedEquipment = $this->validateSerialNumber($equipment);
 
-        return Equipment::create($equipment);
+        if ($validatedEquipment->fails()) {
+            $equipment['id'] = null;
+            $equipment['status'] = $validatedEquipment->errors()->first();
+            return $equipment;
+        }
+        $equipment = Equipment::create($equipment);
+
+        return [
+            'id' => $equipment->id,
+            'serial_number' => $equipment->serial_number,
+            'serial_number_mask' => $serialNumberMask,
+            'description' => $equipment->description,
+            'status' => 'stored'
+        ];
     }
 
 
@@ -87,17 +100,13 @@ class OperateEquipmentService
      * Validate serial number on create/update Equipment
      *
      * @param array $equipment
-     * @return void
-     * @throws Exception
+     * @return \Illuminate\Contracts\Validation\Validator
      */
-    private function validateSerialNumber(array $equipment): void
+    private function validateSerialNumber(array $equipment): \Illuminate\Contracts\Validation\Validator
     {
-        $validator = Validator::make($equipment, [
+        return Validator::make($equipment, [
             "serial_number" => ['required', 'unique:equipments', new CheckMask($equipment['serial_number_mask'])],
         ]);
-        if ($validator->fails()) {
-            throw new Exception($validator->errors()->first());
-        }
     }
 
 
@@ -106,52 +115,86 @@ class OperateEquipmentService
      *
      * @param EquipmentRequest $request
      * @param int $id
-     * @return Equipment
+     * @return JsonResponse
      * @throws Exception
      */
-    public function update(EquipmentRequest $request, int $id): Equipment
+    public function update(EquipmentRequest $request, int $id): JsonResponse
     {
-        $equipment = Equipment::findOrFail($id);
+        try {
+            $equipment = Equipment::findOrFail($id);
 
-        if (!$equipment) {
-            throw new Exception("Equipment not found");
+            if (!$equipment) {
+                throw new Exception("Equipment not found");
+            }
+
+            $eId = $request->get('equipment_id');
+
+            $serialNumberMask = EquipmentsType::find($eId)->serial_number_mask;
+
+            $equipmentUpdate = array_merge($request->all(), ['serial_number_mask' => $serialNumberMask]);
+
+            if ($this->validateSerialNumber($equipmentUpdate)->fails()) {
+                throw new Exception($this->validateSerialNumber($equipmentUpdate)->errors()->first());
+            }
+
+            $equipment->update($equipmentUpdate);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ]);
         }
+        return response()->json([
+            'status' => true,
+            'equipment' => EquipmentResource::make($equipment)
+        ]);
 
-        $eId = $request->get('equipment_id');
 
-        $serialNumberMask = EquipmentsType::find($eId)->serial_number_mask;
-
-        $equipmentUpdate = array_merge($request->all(), ['serial_number_mask' => $serialNumberMask]);
-
-        $this->validateSerialNumber($equipmentUpdate);
-
-        $equipment->update($equipmentUpdate);
-
-        return $equipment;
     }
 
     /**
      * Delete Equipment by id
      *
      * @param int $id
-     * @return void
+     * @return JsonResponse
      */
-    public function delete(int $id): void
+    public function delete(int $id): JsonResponse
     {
-        $equipment = Equipment::find($id);
-        $equipment->delete();
+        try {
+            $equipment = Equipment::find($id);
+            $equipment->delete();
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+        return response()->json([
+            'status' => true,
+            'message' => "Equipment deleted"
+        ]);
     }
 
     /**
      * Show Equipment by id
      *
      * @param int $id
-     * @return EquipmentResource
+     * @return JsonResponse
      */
-    public function show(int $id): EquipmentResource
+    public function show(int $id): JsonResponse
     {
-        $equipment = Equipment::find($id);
-        return EquipmentResource::make($equipment);
+        try {
+            $equipment = EquipmentResource::make(Equipment::find($id));
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+        return response()->json([
+            'status' => true,
+            'equipment' => $equipment
+        ]);
     }
 
     /**

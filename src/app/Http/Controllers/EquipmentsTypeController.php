@@ -14,25 +14,15 @@ class EquipmentsTypeController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
-    public function index(Request $request)
+    public function index(Request $request): \Illuminate\Http\Resources\Json\AnonymousResourceCollection
     {
-        $paginateCount = (int)$request->get('paginate') ?? 25;
+        $paginateCount = $request->get('paginate') ?? 25;
 
         if ($request->has('search')) {
             return EquipmentsTypeResource::collection(EquipmentsType::where('name', 'like', '%' . $request->get("search") . '%')->paginate($paginateCount));
         }
 
         return EquipmentsTypeResource::collection(EquipmentsType::paginate($paginateCount));
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -53,17 +43,6 @@ class EquipmentsTypeController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
     {
         //
     }
