@@ -23,6 +23,6 @@ class Equipment extends Model
      */
     public function equipmentType(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
-        return $this->belongsTo(EquipmentsType::class, 'equipment_id', 'id');
+        return $this->belongsTo(EquipmentsType::class, 'equipments_type_id', 'id');
     }
 }

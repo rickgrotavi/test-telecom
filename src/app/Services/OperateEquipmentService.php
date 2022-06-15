@@ -10,10 +10,21 @@ use App\Rules\CheckMask;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
+
 
 class OperateEquipmentService
 {
+
+    private Collection $validEquipment;
+    private Collection $invalidEquipment;
+
+    public function __construct()
+    {
+        $this->validEquipment = new Collection();
+        $this->invalidEquipment = new Collection();
+    }
 
     /**
      *  Store Equipment
@@ -26,87 +37,70 @@ class OperateEquipmentService
     {
         $equipments = $request->validated();
 
-        $equipmentId = $equipments['equipment_id'];
+        $equipmentId = $equipments['equipments_type_id'];
         $description = $equipments['description'];
 
-        if (is_array($equipments['serial_number'])) {
+        $equipmentsSN = collect($equipments['serial_number']);
 
-            $createdEquipments = collect();
-            foreach ($equipments['serial_number'] as $item) {
-                $equipment = [
-                    'equipment_id' => $equipmentId,
+        if ($equipmentsSN->isNotEmpty()) {
+            $creationEquipment = $equipmentsSN->unique()->map(function ($serialNumber) use ($description, $equipmentId) {
+                return [
+                    'serial_number' => $serialNumber,
+                    'equipments_type_id' => $equipmentId,
                     'description' => $description,
-                    'serial_number' => $item
                 ];
-                $createdEquipments->push(EquipmentResource::make($this->createEquipment($equipment)));
-            }
-
+            });
+            $this->validateCreation($creationEquipment);
+            $this->createEquipments();
 
             return response()->json([
                 'status' => true,
-                'equipments' => $createdEquipments,
+                'invalid_equipments' => $this->invalidEquipment->isNotEmpty() ? $this->invalidEquipment->toArray() : null
             ]);
-
         }
+        throw new Exception('Failed to save');
+    }
 
-        $equipment = [
-            'equipment_id' => $equipmentId,
-            'description' => $description,
-            'serial_number' => $equipments['serial_number'],
-        ];
-        $createdEquipment = $this->createEquipment($equipment);
-
-        return response()->json([
-            'status' => true,
-            'equipments' => EquipmentResource::make($createdEquipment),
-        ]);
+    /**
+     * @param Collection $equipments
+     * @return void
+     */
+    private function validateCreation(Collection $equipments): void
+    {
+        $equipments->each(function ($equipment) {
+            $this->validateSerialNumber(collect($equipment));
+        });
     }
 
     /**
      * Create Equipment
      *
-     * @param array $equipment
-     * @return array
-     * @throws Exception
      */
-    private function createEquipment(array $equipment): array
+    private function createEquipments(): void
     {
-        $equipmentId = $equipment['equipment_id'];
-
-        $serialNumberMask = EquipmentsType::find($equipmentId)->serial_number_mask;
-
-        $equipment += ['serial_number_mask' => $serialNumberMask];
-
-        $validatedEquipment = $this->validateSerialNumber($equipment);
-
-        if ($validatedEquipment->fails()) {
-            $equipment['id'] = null;
-            $equipment['status'] = $validatedEquipment->errors()->first();
-            return $equipment;
-        }
-        $equipment = Equipment::create($equipment);
-
-        return [
-            'id' => $equipment->id,
-            'serial_number' => $equipment->serial_number,
-            'serial_number_mask' => $serialNumberMask,
-            'description' => $equipment->description,
-            'status' => 'stored'
-        ];
+        $this->validEquipment->each(function ($equipment) {
+            Equipment::create($equipment->toArray());
+        });
     }
 
 
     /**
-     * Validate serial number on create/update Equipment
+     * Validate serial number
      *
-     * @param array $equipment
-     * @return \Illuminate\Contracts\Validation\Validator
      */
-    private function validateSerialNumber(array $equipment): \Illuminate\Contracts\Validation\Validator
+    private function validateSerialNumber(Collection $equipment): void
     {
-        return Validator::make($equipment, [
-            "serial_number" => ['required', 'unique:equipments', new CheckMask($equipment['serial_number_mask'])],
+        $serialNumberMask = EquipmentsType::find($equipment['equipments_type_id'])->serial_number_mask;
+
+        $validator = Validator::make($equipment->toArray(), [
+            'serial_number' => ['required', 'unique:equipments', new CheckMask($serialNumberMask)],
         ]);
+
+        if ($validator->fails()) {
+            $this->invalidEquipment->push($equipment->put('message', $validator->getMessageBag()));
+        } else {
+            $this->validEquipment->push($equipment);
+        }
     }
 
 
@@ -120,35 +114,32 @@ class OperateEquipmentService
      */
     public function update(EquipmentRequest $request, int $id): JsonResponse
     {
-        try {
-            $equipment = Equipment::findOrFail($id);
 
-            if (!$equipment) {
-                throw new Exception("Equipment not found");
-            }
+        $equipment = Equipment::findOrFail($id);
 
-            $eId = $request->get('equipment_id');
-
-            $serialNumberMask = EquipmentsType::find($eId)->serial_number_mask;
-
-            $equipmentUpdate = array_merge($request->all(), ['serial_number_mask' => $serialNumberMask]);
-
-            if ($this->validateSerialNumber($equipmentUpdate)->fails()) {
-                throw new Exception($this->validateSerialNumber($equipmentUpdate)->errors()->first());
-            }
-
-            $equipment->update($equipmentUpdate);
-        } catch (Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => $e->getMessage()
-            ]);
+        if (!$equipment) {
+            throw new Exception("Equipment not found");
         }
+
+        $eId = $request->get('equipments_type_id');
+
+        $serialNumberMask = EquipmentsType::find($eId)->serial_number_mask;
+
+        $validator = Validator::make($request->toArray(), [
+            'serial_number' => ['required', 'unique:equipments', new CheckMask($serialNumberMask)],
+        ]);
+
+        if ($validator->fails()) {
+            throw new Exception($validator->errors()->first());
+        }
+
+        $equipment->update($request->all());
+
+
         return response()->json([
             'status' => true,
             'equipment' => EquipmentResource::make($equipment)
         ]);
-
 
     }
 
@@ -160,15 +151,9 @@ class OperateEquipmentService
      */
     public function delete(int $id): JsonResponse
     {
-        try {
-            $equipment = Equipment::find($id);
-            $equipment->delete();
-        } catch (Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => $e->getMessage()
-            ]);
-        }
+        $equipment = Equipment::find($id);
+        $equipment->delete();
+
         return response()->json([
             'status' => true,
             'message' => "Equipment deleted"
@@ -183,14 +168,7 @@ class OperateEquipmentService
      */
     public function show(int $id): JsonResponse
     {
-        try {
-            $equipment = EquipmentResource::make(Equipment::find($id));
-        } catch (Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => $e->getMessage()
-            ]);
-        }
+        $equipment = EquipmentResource::make(Equipment::find($id));
         return response()->json([
             'status' => true,
             'equipment' => $equipment
@@ -213,4 +191,5 @@ class OperateEquipmentService
 
         return EquipmentResource::collection(Equipment::paginate($paginateCount));
     }
+
 }

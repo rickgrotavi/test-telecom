@@ -4,90 +4,63 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use App\Models\User;
+use App\Services\AuthService;
+use Illuminate\Http\JsonResponse;
 
 class AuthController extends Controller
 {
 
+    /**
+     * @var AuthService
+     */
+    private AuthService $authService;
+
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['login','register']]);
+        $this->authService = app(AuthService::class);
+        $this->middleware('auth:api', ['except' => ['login', 'register']]);
     }
 
-    public function login(LoginRequest $request)
+    /**
+     * @param LoginRequest $request
+     * @return JsonResponse
+     */
+    public function login(LoginRequest $request): JsonResponse
     {
-
-        $credentials = $request->only('email', 'password');
-
-        $token = Auth::attempt($credentials);
-        if (!$token) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Unauthorized',
-            ], 401);
-        }
-
-        $user = Auth::user();
-        return response()->json([
-            'status' => 'success',
-            'user' => $user,
-            'authorisation' => [
-                'token' => $token,
-                'type' => 'bearer',
-            ]
-        ]);
-
+        return $this->authService->login($request);
     }
 
-    public function register(RegisterRequest $request){
-
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
-
-        $token = Auth::login($user);
-        return response()->json([
-            'status' => 'success',
-            'message' => 'User created successfully',
-            'user' => $user,
-            'authorisation' => [
-                'token' => $token,
-                'type' => 'bearer',
-            ]
-        ]);
-    }
-
-    public function logout()
+    /**
+     * @param RegisterRequest $request
+     * @return JsonResponse
+     */
+    public function register(RegisterRequest $request): JsonResponse
     {
-        Auth::logout();
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Successfully logged out',
-        ]);
+        return $this->authService->register($request);
     }
 
-    public function me()
+    /**
+     * @return JsonResponse
+     */
+    public function logout(): JsonResponse
     {
-        return response()->json([
-            'status' => 'success',
-            'user' => Auth::user(),
-        ]);
+        return $this->authService->logout();
     }
 
-    public function refresh()
+    /**
+     * @return JsonResponse
+     */
+    public function me(): JsonResponse
     {
-        return response()->json([
-            'status' => 'success',
-            'user' => Auth::user(),
-            'authorisation' => [
-                'token' => Auth::refresh(),
-                'type' => 'bearer',
-            ]
-        ]);
+        return $this->authService->me();
+    }
+
+    /**
+     * @return JsonResponse
+     */
+    public function refresh(): JsonResponse
+    {
+        return $this->authService->refresh();
     }
 
 }

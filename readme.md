@@ -86,7 +86,7 @@ Request Params
 	
 	json
 		{	
-			"equipment_id": 1,
+			"equipments_type_id": 1,
 			"serial_number": "XXAAAAAXAA",
 			"description": "Оборудование"
 		}
@@ -96,7 +96,7 @@ Request Params
 
 	json
 		{
-			"equipment_id": 2,
+			"equipments_type_id": 2,
 			"serial_number": [
 				"1XXAAX-Xaa",
 				"2VVBBD_Fss"

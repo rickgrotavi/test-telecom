@@ -38,7 +38,14 @@ class EquipmentController extends Controller
      */
     public function store(EquipmentRequest $request): JsonResponse
     {
-        return $this->operateEquipmentService->store($request);
+        try {
+            return $this->operateEquipmentService->store($request);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
     }
 
     /**
@@ -49,7 +56,15 @@ class EquipmentController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        return $this->operateEquipmentService->show($id);
+        try {
+            return $this->operateEquipmentService->show($id);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+
     }
 
     /**
@@ -62,7 +77,14 @@ class EquipmentController extends Controller
      */
     public function update(EquipmentRequest $request, int $id): JsonResponse
     {
-        return $this->operateEquipmentService->update($request, $id);
+        try {
+            return $this->operateEquipmentService->update($request, $id);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
     }
 
     /**
@@ -73,6 +95,13 @@ class EquipmentController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        return $this->operateEquipmentService->delete($id);
+        try {
+            return $this->operateEquipmentService->delete($id);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
     }
 }
